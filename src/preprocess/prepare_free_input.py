@@ -65,7 +65,7 @@ def get_random_answer_loc(tokenized_input, entities, entity_chance=0.8, seed=42)
     return is_answer
 
 
-def prepare_featured_input(input_text, output_file_name='free_input.txt', manual_ne_postag=False, lower=False, seed=42):
+def prepare_featured_input(input_text, output_file_name='free_input.txt', manual_ne_postag=False, lower=False, seed=42, answers=None):
     is_answer_sents = []
     is_cased_sents = []
     if manual_ne_postag:
@@ -83,7 +83,10 @@ def prepare_featured_input(input_text, output_file_name='free_input.txt', manual
     postags = create_postags_tensor(tokenized_input, postags, postags_textdict=None, return_in_tensor=False)
     tokenized_sents, entity_sents, postag_sents = sentenize(tokenized_input, entities, postags)
     for i in range(len(tokenized_sents)):
-        is_answer_sents.append(get_random_answer_loc(tokenized_sents[i], entity_sents[i], seed=seed))
+        if (answers == None):
+            is_answer_sents.append(get_random_answer_loc(tokenized_sents[i], entity_sents[i], seed=seed))
+        else :
+            is_answer_sents.append(answers[i])
         is_cased = []
         for j in range(len(tokenized_sents[i])):
             is_cased.append(
