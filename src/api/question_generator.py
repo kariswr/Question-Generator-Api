@@ -9,11 +9,11 @@ class InferenceQuestion(Resource):
         parser = reqparse.RequestParser()  # initialize
         
         parser.add_argument('paragraph', required=True)
-        parser.add_argument('answer', required=True)
+        parser.add_argument('answer', required=True, type=list, action='append')
         
-        args = parser.parse_args()  # parse arguments to dictionary
+        args = parser.parse_args()
        
-        prepare_featured_input(args.paragraph, output_file_name='test.txt', manual_ne_postag=False, lower=True, seed=42)
+        answer_in_order = prepare_featured_input(args.paragraph, output_file_name='test.txt', manual_ne_postag=False, lower=True, seed=42, answers=args.answer)
         preprocessed_file_path = 'test.txt'
 
         print('Generating questions...')
@@ -31,7 +31,14 @@ class InferenceQuestion(Resource):
         for prediction in predictions:
             questions.append(prediction.strip())
         
-        print(questions)
         print('Finish generating questions....')
 
-        return {"questions" : questions}, 200
+        i = 0
+        qas = []
+        while (i < len(questions) and i < len(answer_in_order)):
+            qas.append({'question': questions[i], 'answer': answer_in_order[i]})
+            i += 1
+
+        print(qas)
+
+        return {"qas" : qas}, 200
