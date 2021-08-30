@@ -64,6 +64,37 @@ def get_random_answer_loc(tokenized_input, entities, entity_chance=0.8, seed=42)
     is_answer = ['0' if i not in range(answer_loc[0], answer_loc[1] + 1) else '1' for i in range(len(tokenized_input))]
     return is_answer
 
+def preprocess_answers_label(tokenized_input, answer_list):
+    is_answer = [0] * len(tokenized_input)
+    index_token = 0
+    answer_in_order = []
+    while (index_token < len(tokenized_input)and answer_list != []):
+        for index_answer in range(len(answer_list)):
+            answer_match = False
+            if (tokenized_input[index_token] == answer_list[index_answer][0]):
+                exact_same = True
+                index_answer_word = 1
+                while(index_answer_word < len(answer_list[index_answer]) and exact_same):
+                    if ((index_token + index_answer_word) > len(tokenized_input)):
+                        exact_same = False
+                    elif (tokenized_input[index_token + index_answer_word] != answer_list[index_answer][index_answer_word]):
+                        exact_same = False
+                    else : 
+                        index_answer_word += 1
+                if (exact_same):
+                    answer_match = True
+                    answer_in_order.append(answer_list[index_answer])
+                    for index in range(index_answer_word):
+                        is_answer[index_token + index] = 1
+                    index_token += index_answer_word
+                    break
+        if (answer_match): 
+            answer_list.pop(index_answer)
+            break
+        else :
+            index_token += 1
+    return is_answer, answer_list, answer_in_order
+            
 
 def prepare_featured_input(input_text, output_file_name='free_input.txt', manual_ne_postag=False, lower=False, seed=42, answers=None):
     is_answer_sents = []
@@ -82,11 +113,14 @@ def prepare_featured_input(input_text, output_file_name='free_input.txt', manual
     entities = create_ner_tensor(tokenized_input, entities, ner_textdict=None, return_in_tensor=False)
     postags = create_postags_tensor(tokenized_input, postags, postags_textdict=None, return_in_tensor=False)
     tokenized_sents, entity_sents, postag_sents = sentenize(tokenized_input, entities, postags)
+    answer_in_order = []
     for i in range(len(tokenized_sents)):
         if (answers == None):
             is_answer_sents.append(get_random_answer_loc(tokenized_sents[i], entity_sents[i], seed=seed))
         else :
-            is_answer_sents.append(answers[i])
+            is_answer, answers, temp_answer_in_order = preprocess_answers_label(tokenized_sents[i], answers)
+            is_answer_sents.append(is_answer)
+            answer_in_order += temp_answer_in_order
         is_cased = []
         for j in range(len(tokenized_sents[i])):
             is_cased.append(
@@ -118,6 +152,8 @@ def prepare_featured_input(input_text, output_file_name='free_input.txt', manual
                 f_out.write((print_input_along_feature(tokenized_sents[i], features[i]) + '\n').lower())
             else:
                 f_out.write((print_input_along_feature(tokenized_sents[i], features[i]) + '\n'))
+    if (answers != None):
+        return answer_in_order
 
 def sent_tokenize(input_text):
     tokenized_sents = []
