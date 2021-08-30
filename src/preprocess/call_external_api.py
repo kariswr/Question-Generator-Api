@@ -20,9 +20,6 @@ def get_ner(text):
         }
 
     res = requests.post(url, data = payload, headers = headers)
-
-    print(type(ast.literal_eval(res.text)))
-    print(ast.literal_eval(res.text))
     return ast.literal_eval(res.text)
 
 def get_pos_tag(text):
@@ -48,7 +45,4 @@ def get_pos_tag(text):
         pos_tags.append(temp_sentence)
 
     data = {'postags' : pos_tags}
-
-    print(type(data))
-    print(data)
     return data
