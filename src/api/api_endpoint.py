@@ -5,6 +5,7 @@ from os.path import dirname
 import ast
 import sys
 import pandas as pd
+from fuzzywuzzy import fuzz
 
 sys.path.insert(1, dirname(dirname(sys.path[0])))
 
